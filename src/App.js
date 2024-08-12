@@ -58,7 +58,7 @@ function App() {
   };
 
   const processCard = async (card) => {
-    const apiUrl = `http://localhost/${dropdownValue}.php`;
+    const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/${dropdownValue}.php`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -104,7 +104,9 @@ function App() {
     setMessage("Processing...");
     setStatus("Checking...");
 
-    for (let card of cards) {
+    let remainingCards = [...cards]; // Clone the current cards list
+
+    for (let card of remainingCards) {
       if (stopProcessing.current) {
         setStatus("Stopping...");
         break;
@@ -130,6 +132,11 @@ function App() {
           ]);
           setMessage("ERROR");
         }
+
+        // Remove the processed card from the remaining cards
+        remainingCards = remainingCards.filter((c) => c !== card);
+        setCards(remainingCards);
+        document.getElementById("cards").value = remainingCards.join("\n");
       } catch (error) {
         console.error("Error processing card:", error);
         setErrorCards((prevErrors) => [
@@ -139,13 +146,12 @@ function App() {
         setMessage("Error processing cards");
       }
     }
+
     if (!stopProcessing.current) {
       setStatus("Checking finished.");
     } else {
       setStatus("Stopped");
     }
-    setCards([]);
-    document.getElementById("cards").value = "";
   };
 
   const handleStop = () => {
